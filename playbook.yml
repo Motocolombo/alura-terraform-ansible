@@ -1,8 +1,29 @@
 - hosts: terraform-ansible
   tasks:
-  - name: criando o arquivo
-    copy:
-      dest: /home/ubuntu/index.html
-      content: <h1>Esse bilete eh verdade</h1>
-  - name: criando o servidor
-    shell: "nohup busybox httpd -f -p 8080 &"
+#  - name: criando o arquivo
+#    copy:
+#      dest: /home/ubuntu/index.html
+#      content: <h1>Esse bilete eh verdade</h1>
+#  - name: criando o servidor
+#    shell: "nohup busybox httpd -f -p 8080 &"
+  - name: Instalando o pytho3, virtualenv #nome da tarefa
+    apt: #Assemelha com a função apt do debian
+      pkg: #Define os pacotes a serem instalados
+      - python3
+      - virtualenv
+      update_cache: yes #Chama a função semelhante ao "apt-get update" do debian
+    become: yes #Executa toda esse bloco com super usuário, famoso "sudo"
+  - name: Instalando dependencias com pip (Django e Django Rest)
+    pip: #Comando de instalação de dependências do python
+      virtualenv: /home/ubuntu/tcc/venv #Cria e executa a virtualenv neste caminho
+      name: #Seleciona os pacotes a serem utilizados
+        - django
+        - djangorestframework
+  - name: Iniciando o projeto
+    shell: '. /home/ubuntu/tcc/venv/bin/activate; django-admin startproject setup /home/ubuntu/tcc' #Comando shell para executar o venv, para que não se perca o que já foi feito nesse shell é utilizando o ; para executar mais de um comando no mesmo shell, mas se for necessário um novo shell é só repetir na próxima linha a solicitação do shell
+  - name: Alterando o hosting do settings
+    lineinfile: #Comando que vai buscar em um arquivo específico uma expressão regular e se encontrado ele altera para a nossa necessidade
+      path: /home/ubuntu/tcc/setup/settings.py #Comando que informa o arquivo específico
+      regexp: 'ALLOWED_HOSTS' #Expressão regular que será analisada no arquivo para dar match
+      line: 'ALLOWED_HOSTS = ["*"]' #Caso seja encontrada a expressão, qual alteração será feita na linha
+      backrefs: yes #Caso não encontre a expressão passada, ele não irá mudar nada ou causar erro
